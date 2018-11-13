@@ -8,13 +8,17 @@
 package de.martinx3.spring_boot_basic_example.controller;
 
 import de.martinx3.spring_boot_basic_example.entity.User;
+import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * @author Martin Dünkelmann on 13.11.18
@@ -22,6 +26,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/users")
+@Api(tags = {"users"})
 public class UserRestController {
     private final Map<UUID, User> users;
 
@@ -30,31 +35,40 @@ public class UserRestController {
     }
 
     @GetMapping
-    public Collection<User> getUser() {
-        return users.values();
+    public ResponseEntity<Collection<User>> getUser() {
+        Collection<User> deepCopyUsers = new ArrayList<>();
+
+        users.keySet().forEach(id -> {
+            User user = new User(users.get(id));
+            user.add(linkTo(UserRestController.class).slash(id).withSelfRel());
+            deepCopyUsers.add(user);
+        });
+
+        return ResponseEntity.ok(deepCopyUsers);
     }
 
     @GetMapping(value = "/{id}")
-    private User getUser(@PathVariable UUID id) {
-        return users.get(id);
+    private ResponseEntity<User> getUser(@PathVariable UUID id) {
+        User user = new User(users.get(id));
+        user.add(linkTo(UserRestController.class).slash(id).withSelfRel());
+
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
-        user.setId(UUID.randomUUID());
+        UUID uuid = UUID.randomUUID();
 
-        users.put(user.getId(), user);
+        users.put(uuid, user);
 
-        return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(user.getId()).toUri()).build();
+        return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(uuid).toUri()).build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable UUID id, @RequestBody User updatedUser) {
-        updatedUser.setId(id);
-
         users.put(id, updatedUser);
 
-        return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(updatedUser.getId()).toUri()).build();
+        return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri()).build();
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,5 @@
 # SpringBootBasicExample
-Minimal example of a SpringBoot application
+Minimal example of a SpringBoot application with SwaggerUI and HATEOAS.
 
 Run this project with intellij
 or

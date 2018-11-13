@@ -7,25 +7,25 @@
 
 package de.martinx3.spring_boot_basic_example.entity;
 
-import java.util.UUID;
+import org.springframework.hateoas.ResourceSupport;
 
 /**
  * @author Martin Dünkelmann on 12.11.18
  * @project spring_boot_basic_example
  */
 
-public class User {
-    private UUID id;
+public class User extends ResourceSupport {
     private String username;
     private String password;
 
-    public UUID getId() {
-        return id;
+    public User(User user) {
+        username = user.username;
+        password = user.password;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public User() {
     }
+
 
     public String getUsername() {
         return username;
